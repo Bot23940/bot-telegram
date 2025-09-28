@@ -1,107 +1,110 @@
 import os
 import re
 import telebot
+from datetime import datetime
 
-# ⚠️ REMPLACEZ PAR VOTRE VRAI TOKEN
 BOT_TOKEN = "8325290073:AAGfd9smVVktuirTO8CIOc2qV6MUlAGiE3o"
 bot = telebot.TeleBot(BOT_TOKEN)
 
-print("=== BOT DÉMARRÉ ===")
-print("✅ Bot créé avec succès")
+# FONCTIONS DE DESIGN DIRECTES DANS LE FICHIER
+def design_welcome():
+    return """🎨 <b>🤖 BIENVENUE SUR NOLEAK DATABASE</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def rechercher_fiche_par_numero(numero):
-    """Recherche une fiche par numéro de téléphone"""
+<b>🚀 COMMANDES DISPONIBLES</b>
+├─ <code>/number XXXXXXXXXX</code> - Recherche
+├─ <code>/help</code> - Centre d'aide
+
+<b>💡 EXEMPLE</b>
+<code>/number 0667324073</code>
+
+🔒 <b>SYSTÈME SÉCURISÉ</b>"""
+
+def design_format_fiche(fiche_brute, numero):
+    """Formate une fiche en version jolie"""
     try:
-        print(f"\n=== DÉBUT RECHERCHE ===")
-        print(f"🔍 Numéro à rechercher: '{numero}'")
+        lignes = fiche_brute.split('\n')
         
-        # Nettoyer le numéro
-        numero_clean = re.sub(r'\D', '', numero)
-        print(f"🔍 Numéro nettoyé: '{numero_clean}'")
+        # Extraire le nom
+        nom = ""
+        for ligne in lignes:
+            ligne_clean = ligne.strip()
+            if ligne_clean and not ligne_clean.startswith('Né(e)') and not ligne_clean.startswith('Adresse'):
+                nom = ligne_clean
+                break
         
-        # Vérifier le dossier fiches
-        if not os.path.exists("fiches"):
-            print("❌ Dossier 'fiches' INTROUVABLE")
-            return "❌ Dossier 'fiches' introuvable"
+        # Extraire les informations
+        infos = {}
+        for ligne in lignes:
+            if ':' in ligne:
+                key, value = ligne.split(':', 1)
+                infos[key.strip()] = value.strip()
         
-        print("✅ Dossier 'fiches' trouvé")
+        heure = datetime.now().strftime("%H:%M")
+        date = datetime.now().strftime("%d/%m/%Y")
         
-        # Chemin du fichier
-        chemin_fichier = os.path.join("fiches", "test.txt")
-        print(f"📁 Chemin fichier: {chemin_fichier}")
-        
-        if not os.path.exists(chemin_fichier):
-            print("❌ Fichier test.txt INTROUVABLE")
-            return "❌ Fichier test.txt introuvable"
-        
-        print("✅ Fichier test.txt trouvé")
-        
-        # Lire le fichier
-        print("📖 Lecture du fichier...")
-        with open(chemin_fichier, 'r', encoding='utf-8') as f:
-            contenu_complet = f.read()
-        
-        print(f"📊 Taille fichier: {len(contenu_complet)} caractères")
-        
-        # Vérifier si le numéro est dans le fichier
-        if numero_clean in contenu_complet:
-            print(f"🎯 NUMÉRO TROUVÉ dans le fichier!")
-            
-            # Séparer les fiches
-            fiches = contenu_complet.split('---------------------------------')
-            print(f"📋 Nombre de fiches séparées: {len(fiches)}")
-            
-            # Trouver la bonne fiche
-            for i, fiche in enumerate(fiches):
-                if numero_clean in fiche:
-                    print(f"✅ Fiche exacte trouvée: #{i+1}")
-                    fiche_propre = fiche.strip()
-                    if fiche_propre:
-                        print(f"📤 Envoi fiche de {len(fiche_propre)} caractères")
-                        return f"✅ FICHE TROUVÉE :\n\n{fiche_propre}"
-            
-            return "❌ Fiche trouvée mais erreur d'extraction"
-        else:
-            print(f"❌ NUMÉRO NON TROUVÉ dans le fichier")
-            return f"❌ Aucune fiche trouvée pour {numero}"
-            
+        return f"""🎨 <b>🔍 RECHERCHE TELEPHONIQUE</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>📊 IDENTIFICATION</b>
+├─ <b>👤 Nom:</b> {nom}
+├─ <b>🎂 Naissance:</b> {infos.get('Né(e) le', 'Non renseigné')}
+
+<b>📍 LOCALISATION</b>
+├─ <b>🏠 Adresse:</b> {infos.get('Adresse', 'Non renseigné')}
+└─ <b>🌆 Ville:</b> {infos.get('Ville', 'Non renseigné')}
+
+<b>📞 COORDONNÉES</b>
+├─ <b>📱 Téléphone:</b> <code>{infos.get('Téléphone(s)', 'Non renseigné')}</code>
+└─ <b>📧 Email:</b> <code>{infos.get('Email', 'Non renseigné')}</code>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ <b>RÉUSSITE</b> • 📅 {date} • 🕒 {heure}"""
+    
     except Exception as e:
-        print(f"💥 ERREUR: {e}")
+        return f"❌ Erreur formatage: {e}"
+
+# FONCTION DE RECHERCHE
+def rechercher_fiche(numero):
+    try:
+        numero_clean = re.sub(r'\D', '', numero)
+        
+        if not os.path.exists("fiches/test.txt"):
+            return "❌ Fichier introuvable"
+        
+        with open("fiches/test.txt", 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        fiches = content.split('---------------------------------')
+        
+        for fiche in fiches:
+            if numero_clean in fiche:
+                return design_format_fiche(fiche.strip(), numero_clean)
+        
+        return f"❌ Aucune fiche pour {numero}"
+        
+    except Exception as e:
         return f"❌ Erreur: {e}"
 
+# HANDLERS DU BOT
 @bot.message_handler(commands=['start'])
 def start(message):
-    print(f"\n🎯 /start reçu de: {message.from_user.username}")
-    bot.reply_to(message, "🤖 Bot actif! Testez /number 0667324073")
+    bot.reply_to(message, design_welcome(), parse_mode='HTML')
 
 @bot.message_handler(commands=['number'])
-def number(message):
-    print(f"\n📱 /number reçu: '{message.text}'")
-    print(f"👤 De: {message.from_user.username}")
-    
+def number_cmd(message):
     parts = message.text.split()
-    print(f"🔍 Parts: {parts}")
-    
     if len(parts) < 2:
-        print("❌ Pas de numéro fourni")
-        bot.reply_to(message, "❌ Usage: /number 0678907644")
+        bot.reply_to(message, "❌ Usage: /number 0612345678")
         return
     
     numero = parts[1]
-    print(f"🔍 Numéro extrait: '{numero}'")
-    
-    resultat = rechercher_fiche_par_numero(numero)
-    print(f"📤 Résultat à envoyer: {len(resultat)} caractères")
-    
-    bot.reply_to(message, resultat)
-    print("✅ Message envoyé!")
+    resultat = rechercher_fiche(numero)
+    bot.reply_to(message, resultat, parse_mode='HTML')
 
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    print(f"📨 Message: '{message.text}'")
-    bot.reply_to(message, "❌ Commande inconnue. Utilisez /help")
+@bot.message_handler(commands=['help'])
+def help_cmd(message):
+    bot.reply_to(message, design_welcome(), parse_mode='HTML')
 
-print("\n🚀 Bot en attente de messages...")
-print("💡 Testez avec: /number 0667324073")
-print("💡 Testez avec: /number 0631057528")
+print("🚀 Bot démarré!")
 bot.polling()
