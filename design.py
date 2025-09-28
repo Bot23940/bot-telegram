@@ -1,59 +1,88 @@
-```python
 from datetime import datetime
 
 class BotDesign:
-    """Classe pour un design avec fond vert et barres verticales collées"""
+    """Classe pour reproduire exactement le design de l'image"""
 
     @staticmethod
     def format_fiche(fiche_brute, numero):
         try:
             lignes = fiche_brute.split('\n')
 
-            # Extraire le nom
+            # Extraire les informations
             nom = ""
+            date_naissance = ""
+            adresse_ligne1 = ""
+            adresse_ligne2 = ""
+            telephone = ""
+            iban = ""
+            bic = ""
+            email = ""
+            ville = ""
+
             for ligne in lignes:
                 ligne_clean = ligne.strip()
-                if ligne_clean and not ligne_clean.startswith('Né(e)') and not ligne_clean.startswith('Adresse'):
+                if ligne_clean.startswith('/number'):
+                    continue
+                elif ligne_clean.startswith('Match found:'):
+                    continue
+                elif ligne_clean and not any(ligne_clean.startswith(x) for x in ['Né(e)', 'Adresse', 'Téléphone', 'IBAN', 'BIC', 'Email', 'Ville']):
                     nom = ligne_clean
-                    break
+                elif ligne_clean.startswith('Né(e) le'):
+                    date_naissance = ligne_clean.split('Né(e) le')[-1].strip()
+                elif ligne_clean.startswith('Adresse :'):
+                    adresse_ligne1 = ligne_clean.split('Adresse :')[-1].strip()
+                elif ligne_clean.startswith('Téléphone(s) :'):
+                    telephone = ligne_clean.split('Téléphone(s) :')[-1].strip()
+                elif ligne_clean.startswith('IBAN :'):
+                    iban = ligne_clean.split('IBAN :')[-1].strip()
+                elif ligne_clean.startswith('BIC :'):
+                    bic = ligne_clean.split('BIC :')[-1].strip()
+                elif ligne_clean.startswith('Email :'):
+                    email = ligne_clean.split('Email :')[-1].strip()
+                elif ligne_clean.startswith('Ville :'):
+                    ville = ligne_clean.split('Ville :')[-1].strip()
+                elif ligne_clean and not adresse_ligne2 and adresse_ligne1:
+                    # C'est la deuxième ligne de l'adresse
+                    adresse_ligne2 = ligne_clean
 
-            # Extraire les infos clé:valeur
-            infos = {}
-            current_key = ""
-            for ligne in lignes:
-                ligne_clean = ligne.strip()
-                if ':' in ligne_clean:
-                    key, value = ligne_clean.split(':', 1)
-                    infos[key.strip()] = value.strip()
-                    current_key = key.strip()
-                elif current_key and ligne_clean:
-                    infos[current_key] += " " + ligne_clean
+            # Design exact comme l'image
+            return f"""/number {numero}
 
-            for key in infos:
-                infos[key] = infos[key].strip()
+Match found:
 
-            heure_actuelle = datetime.now().strftime("%H:%M")
+{nom}
+Né(e) le {date_naissance}
+Adresse : {adresse_ligne1}
+{adresse_ligne2}
+Téléphone(s) : {telephone}
+IBAN :
+{iban}
+BIC : {bic}
+Email :
+{email}
+Ville : {ville}"""
 
-            # Design avec fond vert + barres
-            return f"""
-<pre>
-🟢━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━🟢
-<b>        ✅ Match found ✅        </b>
-🟢━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━🟢
-
-👤 {nom}
-🗓️ Né(e) le : {infos.get('Né(e) le', 'Non renseigné')}
-🏠 Adresse   : {infos.get('Adresse', 'Non renseigné')}
-📱 Téléphone : {infos.get('Téléphone(s)', 'Non renseigné')}
-💳 IBAN      : {infos.get('IBAN', 'Non renseigné')}
-🏦 BIC       : {infos.get('BIC', 'Non renseigné')}
-📧 Email     : {infos.get('Email', 'Non renseigné')}
-🌆 Ville     : {infos.get('Ville', 'Non renseigné')}
-
-⏰ {heure_actuelle}
-🟢━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━🟢
-</pre>
-"""
         except Exception as e:
             return f"❌ Erreur formatage: {e}"
-```
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    fiche_exemple = """/number 0659515481
+
+Match found:
+
+Manon LAVERGNE
+Né(e) le 19/07/1992
+Adresse : 116 BOULEVARD EXELMANS
+75016 PARIS
+Téléphone(s) : 0659515481
+IBAN :
+FR80204330262GN265528725335
+BIC : NTSBFRM1XXX
+Email :
+manonlavergne.ml@gmail.com
+Ville : PARIS"""
+
+    design = BotDesign()
+    resultat = design.format_fiche(fiche_exemple, "0659515481")
+    print(resultat)
