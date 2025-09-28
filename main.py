@@ -1,11 +1,18 @@
 import os
 import re
+import time
 import telebot
+from telebot import apihelper
 from design import BotDesign
 
 # ⚠️ REMPLACEZ PAR VOTRE VRAI TOKEN
 BOT_TOKEN = "8325290073:AAGfd9smVVktuirTO8CIOc2qV6MUlAGiE3o"
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# Configuration pour éviter les conflits
+apihelper.RETRY_ON_ERROR = True
+apihelper.MAX_RETRIES = 3
+apihelper.TIMEOUT = 30
 
 print("=== BOT DÉMARRÉ ===")
 print("✅ Bot créé avec succès")
@@ -116,7 +123,31 @@ def echo_all(message):
     print(f"📨 Message: '{message.text}'")
     bot.reply_to(message, BotDesign.unknown_command(), parse_mode='HTML')
 
-print("\n🚀 Bot Noleak Database Premium démarré!")
-print("💡 Testez avec: /number 0667324073")
-print("💡 Testez avec: /number 0631057528")
-bot.polling()
+# Fonction principale avec gestion des erreurs
+def main():
+    print("\n🚀 Bot Noleak Database Premium démarré!")
+    print("💡 Testez avec: /number 0667324073")
+    print("💡 Testez avec: /number 0631057528")
+    
+    max_retries = 5
+    retry_delay = 10  # secondes
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"🚀 Tentative de démarrage {attempt + 1}/{max_retries}...")
+            bot.infinity_polling(timeout=30, long_polling_timeout=30)
+            break
+            
+        except Exception as e:
+            print(f"❌ Erreur lors du démarrage: {e}")
+            
+            if attempt < max_retries - 1:
+                print(f"⏳ Nouvelle tentative dans {retry_delay} secondes...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Backoff exponentiel
+            else:
+                print("💥 Échec après plusieurs tentatives")
+                raise
+
+if __name__ == "__main__":
+    main()
