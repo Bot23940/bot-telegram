@@ -1,6 +1,8 @@
 import os
 import re
 import time
+import threading
+from flask import Flask
 import telebot
 from telebot import apihelper
 from design import BotDesign
@@ -14,8 +16,16 @@ apihelper.RETRY_ON_ERROR = True
 apihelper.MAX_RETRIES = 5
 apihelper.TIMEOUT = 90
 
-print("=== BOT DÉMARRÉ ===")
-print("✅ Bot créé avec succès")
+# Application Flask pour le port binding
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 Bot Telegram en ligne!"
+
+@app.route('/health')
+def health():
+    return "OK", 200
 
 def rechercher_fiche_par_numero(numero):
     """Recherche une fiche par numéro de téléphone"""
@@ -123,7 +133,8 @@ def echo_all(message):
     print(f"📨 Message: '{message.text}'")
     bot.reply_to(message, BotDesign.unknown_command(), parse_mode='HTML')
 
-def main():
+def run_bot():
+    """Lance le bot Telegram dans un thread séparé"""
     print("\n🚀 Bot Noleak Database Premium démarré!")
     print("💡 Testez avec: /number 0667324073")
     print("💡 Testez avec: /number 0631057528")
@@ -141,6 +152,15 @@ def main():
             print(f"❌ Erreur de polling: {e}")
             print("🔄 Reconnexion dans 10 secondes...")
             time.sleep(10)
+
+def main():
+    # Démarrer le bot dans un thread séparé
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+    
+    # Démarrer Flask sur le port 10000 (requis par Render)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
     main()
