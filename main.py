@@ -7,8 +7,8 @@ import time
 BOT_TOKEN = "8325290073:AAGfd9smVVktuirTO8CIOc2qV6MUlAGiE3o"
 bot = telebot.TeleBot(BOT_TOKEN)
 
-print("=== BOT DÉMARRÉ ===")
-print("✅ Une seule instance doit tourner")
+print("🔄 Démarrage du bot...")
+print("📡 Vérification des instances en conflit...")
 
 def rechercher_fiche_par_numero(numero):
     """Recherche une fiche par numéro de téléphone"""
@@ -34,7 +34,7 @@ def rechercher_fiche_par_numero(numero):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "🤖 Bot actif! Utilise /number 0667324073")
+    bot.reply_to(message, "🤖 Bot ACTIF ! Utilise /number 0667324073")
 
 @bot.message_handler(commands=['number'])
 def number(message):
@@ -51,12 +51,18 @@ def number(message):
 def echo_all(message):
     bot.reply_to(message, "❌ Commande inconnue. Utilisez /help")
 
-print("🚀 Démarrage du bot...")
-print("💡 Assure-toi qu'une seule instance tourne")
-
-try:
-    bot.polling(none_stop=True, interval=1)
-except Exception as e:
-    print(f"💥 Erreur: {e}")
-    print("🔧 Redémarrage dans 5 secondes...")
-    time.sleep(5)
+# DÉMARRAGE SÉCURISÉ
+if __name__ == "__main__":
+    print("🚀 Lancement en mode sécurisé...")
+    
+    try:
+        # Essayer de démarrer avec timeout
+        bot.polling(none_stop=True, timeout=60)
+    except telebot.apihelper.ApiTelegramException as e:
+        if "409" in str(e):
+            print("💥 CONFLIT DÉTECTÉ : Une autre instance tourne encore")
+            print("🛑 Arrêt de cette instance pour éviter les doublons")
+        else:
+            print(f"💥 Autre erreur: {e}")
+    except Exception as e:
+        print(f"💥 Erreur générale: {e}")
