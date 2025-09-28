@@ -1,31 +1,13 @@
 import os
 import re
-import time
-import threading
-from flask import Flask
 import telebot
-from telebot import apihelper
-from design import BotDesign
 
-# Configuration
+# ⚠️ REMPLACEZ PAR VOTRE VRAI TOKEN
 BOT_TOKEN = "8325290073:AAGfd9smVVktuirTO8CIOc2qV6MUlAGiE3o"
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# Configuration pour Render
-apihelper.RETRY_ON_ERROR = True
-apihelper.MAX_RETRIES = 5
-apihelper.TIMEOUT = 90
-
-# Application Flask pour le port binding
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "🤖 Bot Telegram en ligne!"
-
-@app.route('/health')
-def health():
-    return "OK", 200
+print("=== BOT DÉMARRÉ ===")
+print("✅ Bot créé avec succès")
 
 def rechercher_fiche_par_numero(numero):
     """Recherche une fiche par numéro de téléphone"""
@@ -40,7 +22,7 @@ def rechercher_fiche_par_numero(numero):
         # Vérifier le dossier fiches
         if not os.path.exists("fiches"):
             print("❌ Dossier 'fiches' INTROUVABLE")
-            return BotDesign.error_system("Dossier 'fiches' introuvable")
+            return "❌ Dossier 'fiches' introuvable"
         
         print("✅ Dossier 'fiches' trouvé")
         
@@ -50,7 +32,7 @@ def rechercher_fiche_par_numero(numero):
         
         if not os.path.exists(chemin_fichier):
             print("❌ Fichier test.txt INTROUVABLE")
-            return BotDesign.error_system("Fichier test.txt introuvable")
+            return "❌ Fichier test.txt introuvable"
         
         print("✅ Fichier test.txt trouvé")
         
@@ -75,22 +57,22 @@ def rechercher_fiche_par_numero(numero):
                     print(f"✅ Fiche exacte trouvée: #{i+1}")
                     fiche_propre = fiche.strip()
                     if fiche_propre:
-                        print(f"📤 Envoi fiche formatée")
-                        return BotDesign.format_fiche(fiche_propre, numero_clean)
+                        print(f"📤 Envoi fiche de {len(fiche_propre)} caractères")
+                        return f"✅ FICHE TROUVÉE :\n\n{fiche_propre}"
             
-            return BotDesign.error_system("Fiche trouvée mais erreur d'extraction")
+            return "❌ Fiche trouvée mais erreur d'extraction"
         else:
             print(f"❌ NUMÉRO NON TROUVÉ dans le fichier")
-            return BotDesign.error_not_found(numero)
+            return f"❌ Aucune fiche trouvée pour {numero}"
             
     except Exception as e:
         print(f"💥 ERREUR: {e}")
-        return BotDesign.error_system(str(e))
+        return f"❌ Erreur: {e}"
 
 @bot.message_handler(commands=['start'])
 def start(message):
     print(f"\n🎯 /start reçu de: {message.from_user.username}")
-    bot.reply_to(message, BotDesign.welcome_message(), parse_mode='HTML')
+    bot.reply_to(message, "🤖 Bot actif! Testez /number 0667324073")
 
 @bot.message_handler(commands=['number'])
 def number(message):
@@ -102,65 +84,24 @@ def number(message):
     
     if len(parts) < 2:
         print("❌ Pas de numéro fourni")
-        bot.reply_to(message, BotDesign.error_syntax(), parse_mode='HTML')
+        bot.reply_to(message, "❌ Usage: /number 0678907644")
         return
     
     numero = parts[1]
     print(f"🔍 Numéro extrait: '{numero}'")
     
-    # Message de recherche en cours
-    msg = bot.reply_to(message, BotDesign.searching_message(numero), parse_mode='HTML')
-    
-    # Faire la recherche
     resultat = rechercher_fiche_par_numero(numero)
     print(f"📤 Résultat à envoyer: {len(resultat)} caractères")
     
-    # Supprimer le message "recherche en cours" et envoyer le résultat
-    try:
-        bot.delete_message(message.chat.id, msg.message_id)
-    except:
-        pass
-    
-    bot.reply_to(message, resultat, parse_mode='HTML')
+    bot.reply_to(message, resultat)
     print("✅ Message envoyé!")
-
-@bot.message_handler(commands=['help'])
-def help(message):
-    bot.reply_to(message, BotDesign.help_message(), parse_mode='HTML')
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     print(f"📨 Message: '{message.text}'")
-    bot.reply_to(message, BotDesign.unknown_command(), parse_mode='HTML')
+    bot.reply_to(message, "❌ Commande inconnue. Utilisez /help")
 
-def run_bot():
-    """Lance le bot Telegram dans un thread séparé"""
-    print("\n🚀 Bot Noleak Database Premium démarré!")
-    print("💡 Testez avec: /number 0667324073")
-    print("💡 Testez avec: /number 0631057528")
-    
-    # Boucle principale pour garder le bot actif
-    while True:
-        try:
-            print("🔄 Démarrage du polling...")
-            bot.infinity_polling(
-                timeout=60,
-                long_polling_timeout=60,
-                logger_level=None
-            )
-        except Exception as e:
-            print(f"❌ Erreur de polling: {e}")
-            print("🔄 Reconnexion dans 10 secondes...")
-            time.sleep(10)
-
-def main():
-    # Démarrer le bot dans un thread séparé
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-    
-    # Démarrer Flask sur le port 10000 (requis par Render)
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
-
-if __name__ == "__main__":
-    main()
+print("\n🚀 Bot en attente de messages...")
+print("💡 Testez avec: /number 0667324073")
+print("💡 Testez avec: /number 0631057528")
+bot.polling()
