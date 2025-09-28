@@ -1,16 +1,9 @@
 import os
 import re
 import telebot
-from dotenv import load_dotenv
 
-# Charger les variables d'environnement
-load_dotenv()
-
-# Token sécurisé
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
-if not BOT_TOKEN:
-    raise ValueError("❌ BOT_TOKEN non trouvé dans les variables d'environnement")
-
+# ⚠️ REMPLACEZ PAR VOTRE VRAI TOKEN
+BOT_TOKEN = "8325290073:AAGfd9smVVktuirTO8CIOc2qV6MUlAGiE3o"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 print("=== BOT DÉMARRÉ ===")
@@ -33,64 +26,53 @@ def rechercher_fiche_par_numero(numero):
         
         print("✅ Dossier 'fiches' trouvé")
         
-        # Chercher dans tous les fichiers .txt
-        fichiers_trouves = []
-        for filename in os.listdir("fiches"):
-            if filename.endswith('.txt'):
-                chemin_fichier = os.path.join("fiches", filename)
-                print(f"📁 Recherche dans: {filename}")
-                
-                if not os.path.exists(chemin_fichier):
-                    print(f"❌ Fichier {filename} INTROUVABLE")
-                    continue
-                
-                # Lire le fichier
-                with open(chemin_fichier, 'r', encoding='utf-8') as f:
-                    contenu_complet = f.read()
-                
-                print(f"📊 Taille fichier {filename}: {len(contenu_complet)} caractères")
-                
-                # Vérifier si le numéro est dans le fichier
-                if numero_clean in contenu_complet:
-                    print(f"🎯 NUMÉRO TROUVÉ dans {filename}!")
-                    
-                    # Séparer les fiches
-                    fiches = contenu_complet.split('---------------------------------')
-                    print(f"📋 Nombre de fiches séparées: {len(fiches)}")
-                    
-                    # Trouver la bonne fiche
-                    for i, fiche in enumerate(fiches):
-                        if numero_clean in fiche:
-                            print(f"✅ Fiche exacte trouvée: #{i+1}")
-                            fiche_propre = fiche.strip()
-                            if fiche_propre:
-                                print(f"📤 Envoi fiche de {len(fiche_propre)} caractères")
-                                fichiers_trouves.append({
-                                    'fichier': filename,
-                                    'contenu': f"✅ FICHE TROUVÉE ({filename}) :\n\n{fiche_propre}"
-                                })
+        # Chemin du fichier
+        chemin_fichier = os.path.join("fiches", "test.txt")
+        print(f"📁 Chemin fichier: {chemin_fichier}")
         
-        if fichiers_trouves:
-            # Retourner toutes les fiches trouvées
-            resultat = "\n\n".join([f['contenu'] for f in fichiers_trouves])
-            return resultat
+        if not os.path.exists(chemin_fichier):
+            print("❌ Fichier test.txt INTROUVABLE")
+            return "❌ Fichier test.txt introuvable"
+        
+        print("✅ Fichier test.txt trouvé")
+        
+        # Lire le fichier
+        print("📖 Lecture du fichier...")
+        with open(chemin_fichier, 'r', encoding='utf-8') as f:
+            contenu_complet = f.read()
+        
+        print(f"📊 Taille fichier: {len(contenu_complet)} caractères")
+        
+        # Vérifier si le numéro est dans le fichier
+        if numero_clean in contenu_complet:
+            print(f"🎯 NUMÉRO TROUVÉ dans le fichier!")
+            
+            # Séparer les fiches
+            fiches = contenu_complet.split('---------------------------------')
+            print(f"📋 Nombre de fiches séparées: {len(fiches)}")
+            
+            # Trouver la bonne fiche
+            for i, fiche in enumerate(fiches):
+                if numero_clean in fiche:
+                    print(f"✅ Fiche exacte trouvée: #{i+1}")
+                    fiche_propre = fiche.strip()
+                    if fiche_propre:
+                        print(f"📤 Envoi fiche de {len(fiche_propre)} caractères")
+                        return f"✅ FICHE TROUVÉE :\n\n{fiche_propre}"
+            
+            return "❌ Fiche trouvée mais erreur d'extraction"
         else:
-            print(f"❌ NUMÉRO NON TROUVÉ dans aucun fichier")
+            print(f"❌ NUMÉRO NON TROUVÉ dans le fichier")
             return f"❌ Aucune fiche trouvée pour {numero}"
             
     except Exception as e:
         print(f"💥 ERREUR: {e}")
         return f"❌ Erreur: {e}"
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def start(message):
     print(f"\n🎯 /start reçu de: {message.from_user.username}")
-    bot.reply_to(message, 
-                 "🤖 **Bot de recherche de fiches**\n\n"
-                 "🔍 **Commandes disponibles:**\n"
-                 "/start ou /help - Affiche cette aide\n"
-                 "/number <numéro> - Recherche une fiche\n\n"
-                 "💡 **Exemple:** `/number 0667324073`")
+    bot.reply_to(message, "🤖 Bot actif! Testez /number 0667324073")
 
 @bot.message_handler(commands=['number'])
 def number(message):
@@ -108,19 +90,8 @@ def number(message):
     numero = parts[1]
     print(f"🔍 Numéro extrait: '{numero}'")
     
-    # Vérifier que c'est un numéro valide
-    if not re.match(r'^[\d\s\+\.-]+$', numero):
-        bot.reply_to(message, "❌ Format de numéro invalide")
-        return
-    
-    bot.reply_to(message, "🔍 Recherche en cours...")
-    
     resultat = rechercher_fiche_par_numero(numero)
     print(f"📤 Résultat à envoyer: {len(resultat)} caractères")
-    
-    # Envoyer le résultat (limiter la longueur pour Telegram)
-    if len(resultat) > 4000:
-        resultat = resultat[:4000] + "\n\n... (contenu tronqué)"
     
     bot.reply_to(message, resultat)
     print("✅ Message envoyé!")
@@ -128,16 +99,9 @@ def number(message):
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     print(f"📨 Message: '{message.text}'")
-    bot.reply_to(message, 
-                 "❌ Commande inconnue.\n\n"
-                 "Utilisez /help pour voir les commandes disponibles.")
+    bot.reply_to(message, "❌ Commande inconnue. Utilisez /help")
 
-if __name__ == "__main__":
-    print("\n🚀 Bot en attente de messages...")
-    print("💡 Testez avec: /number 0667324073")
-    print("💡 Testez avec: /number 0631057528")
-    
-    try:
-        bot.polling(none_stop=True)
-    except Exception as e:
-        print(f"💥 Erreur polling: {e}")
+print("\n🚀 Bot en attente de messages...")
+print("💡 Testez avec: /number 0667324073")
+print("💡 Testez avec: /number 0631057528")
+bot.polling()
