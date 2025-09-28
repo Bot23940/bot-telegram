@@ -1,10 +1,18 @@
 import os
 import re
+import time
 import telebot
+from telebot import apihelper
+from design import BotDesign
 
-# ⚠️ REMPLACEZ PAR VOTRE VRAI TOKEN
+# Configuration
 BOT_TOKEN = "8325290073:AAGfd9smVVktuirTO8CIOc2qV6MUlAGiE3o"
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# Configuration anti-conflit
+apihelper.RETRY_ON_ERROR = True
+apihelper.MAX_RETRIES = 3
+apihelper.TIMEOUT = 60
 
 print("=== BOT DÉMARRÉ ===")
 print("✅ Bot créé avec succès")
@@ -22,7 +30,7 @@ def rechercher_fiche_par_numero(numero):
         # Vérifier le dossier fiches
         if not os.path.exists("fiches"):
             print("❌ Dossier 'fiches' INTROUVABLE")
-            return "❌ Dossier 'fiches' introuvable"
+            return BotDesign.error_system("Dossier 'fiches' introuvable")
         
         print("✅ Dossier 'fiches' trouvé")
         
@@ -32,7 +40,7 @@ def rechercher_fiche_par_numero(numero):
         
         if not os.path.exists(chemin_fichier):
             print("❌ Fichier test.txt INTROUVABLE")
-            return "❌ Fichier test.txt introuvable"
+            return BotDesign.error_system("Fichier test.txt introuvable")
         
         print("✅ Fichier test.txt trouvé")
         
@@ -57,22 +65,22 @@ def rechercher_fiche_par_numero(numero):
                     print(f"✅ Fiche exacte trouvée: #{i+1}")
                     fiche_propre = fiche.strip()
                     if fiche_propre:
-                        print(f"📤 Envoi fiche de {len(fiche_propre)} caractères")
-                        return f"✅ FICHE TROUVÉE :\n\n{fiche_propre}"
+                        print(f"📤 Envoi fiche formatée")
+                        return BotDesign.format_fiche(fiche_propre, numero_clean)
             
-            return "❌ Fiche trouvée mais erreur d'extraction"
+            return BotDesign.error_system("Fiche trouvée mais erreur d'extraction")
         else:
             print(f"❌ NUMÉRO NON TROUVÉ dans le fichier")
-            return f"❌ Aucune fiche trouvée pour {numero}"
+            return BotDesign.error_not_found(numero)
             
     except Exception as e:
         print(f"💥 ERREUR: {e}")
-        return f"❌ Erreur: {e}"
+        return BotDesign.error_system(str(e))
 
 @bot.message_handler(commands=['start'])
 def start(message):
     print(f"\n🎯 /start reçu de: {message.from_user.username}")
-    bot.reply_to(message, "🤖 Bot actif! Testez /number 0667324073")
+    bot.reply_to(message, BotDesign.welcome_message(), parse_mode='HTML')
 
 @bot.message_handler(commands=['number'])
 def number(message):
@@ -84,24 +92,83 @@ def number(message):
     
     if len(parts) < 2:
         print("❌ Pas de numéro fourni")
-        bot.reply_to(message, "❌ Usage: /number 0678907644")
+        bot.reply_to(message, BotDesign.error_syntax(), parse_mode='HTML')
         return
     
     numero = parts[1]
     print(f"🔍 Numéro extrait: '{numero}'")
     
+    # Message de recherche en cours
+    msg = bot.reply_to(message, BotDesign.searching_message(numero), parse_mode='HTML')
+    
+    # Faire la recherche
     resultat = rechercher_fiche_par_numero(numero)
     print(f"📤 Résultat à envoyer: {len(resultat)} caractères")
     
-    bot.reply_to(message, resultat)
+    # Supprimer le message "recherche en cours" et envoyer le résultat
+    try:
+        bot.delete_message(message.chat.id, msg.message_id)
+    except:
+        pass
+    
+    bot.reply_to(message, resultat, parse_mode='HTML')
     print("✅ Message envoyé!")
+
+@bot.message_handler(commands=['help'])
+def help(message):
+    bot.reply_to(message, BotDesign.help_message(), parse_mode='HTML')
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     print(f"📨 Message: '{message.text}'")
-    bot.reply_to(message, "❌ Commande inconnue. Utilisez /help")
+    bot.reply_to(message, BotDesign.unknown_command(), parse_mode='HTML')
 
-print("\n🚀 Bot en attente de messages...")
-print("💡 Testez avec: /number 0667324073")
-print("💡 Testez avec: /number 0631057528")
-bot.polling()
+def stop_existing_polling():
+    """Arrête toute instance existante du bot"""
+    try:
+        bot.stop_polling()
+        time.sleep(2)
+    except:
+        pass
+
+def main():
+    print("\n🚀 Bot Noleak Database Premium démarré!")
+    print("💡 Testez avec: /number 0667324073")
+    print("💡 Testez avec: /number 0631057528")
+    
+    # Arrêter toute instance existante
+    stop_existing_polling()
+    
+    max_retries = 3
+    retry_delay = 5
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"🔄 Tentative {attempt + 1}/{max_retries}")
+            
+            # Utiliser infinity_polling avec timeout court
+            bot.infinity_polling(
+                timeout=30, 
+                long_polling_timeout=30,
+                logger_level=None  # Réduit les logs
+            )
+            break
+            
+        except Exception as e:
+            print(f"❌ Erreur: {e}")
+            
+            if "Conflict" in str(e) or "409" in str(e):
+                print("🛑 Conflit détecté - Arrêt de l'instance existante...")
+                stop_existing_polling()
+                
+            if attempt < max_retries - 1:
+                print(f"⏳ Nouvelle tentative dans {retry_delay}s...")
+                time.sleep(retry_delay)
+            else:
+                print("💥 Échec après plusieurs tentatives")
+                # Forcer l'arrêt
+                import sys
+                sys.exit(1)
+
+if __name__ == "__main__":
+    main()
