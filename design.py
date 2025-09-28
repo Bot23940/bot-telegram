@@ -1,178 +1,141 @@
 from datetime import datetime
 
 class BotDesign:
-    """Classe pour le design beau du bot"""
+    """Classe pour le design beau avec barre verte"""
     
     @staticmethod
     def welcome_message():
-        return """🎨 <b>🤖 BIENVENUE SUR NOLEAK DATABASE</b>
+        return """🔐 <b>Noleak Database</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>🎯 SYSTÈME DE RECHERCHE AVANCÉ</b>
-• Recherche par numéro téléphone
-• Fiches clients complètes
-• Interface premium
+<b>Système de recherche avancée</b>
 
-<b>🚀 COMMANDES DISPONIBLES</b>
-├─ <code>/number XXXXXXXXXX</code> - Recherche
-├─ <code>/help</code> - Centre d'aide
-└─ <code>/info</code> - Informations
+<b>Commandes disponibles:</b>
+• /number [numéro] - Recherche par téléphone
+• /help - Aide
 
-<b>💡 EXEMPLE D'UTILISATION</b>
-<code>/number 0667324073</code>
+<b>Exemple:</b>
+<code>/number 0659515481</code>
 
-🔒 <b>SYSTÈME SÉCURISÉ • RECHERCHE INSTANTANÉE</b>"""
+🔒 <i>Système sécurisé</i>"""
     
     @staticmethod
     def help_message():
-        return """🎨 <b>📋 CENTRE D'AIDE NOLEAK</b>
+        return """📋 <b>Centre d'aide</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>🚀 COMMANDES PRINCIPALES</b>
-├─ <code>/number XXXXXXXXXX</code> - Recherche
-├─ <code>/start</code> - Menu principal
-└─ <code>/help</code> - Cette aide
+<b>Commandes:</b>
+• /number [numéro] - Recherche
+• /start - Menu principal
+• /help - Cette aide
 
-<b>💡 EXEMPLES CONCRETS</b>
-├─ <code>/number 0631057528</code>
-├─ <code>/number 0667324073</code>
-└─ <code>/number 0675448532</code>
+<b>Exemples de recherche:</b>
+• <code>/number 0631057528</code>
+• <code>/number 0667324073</code>
+• <code>/number 0675448532</code>
 
-<b>🎯 FONCTIONNALITÉS</b>
-├─ Recherche instantanée
-├─ Fiches détaillées
-├─ Interface premium
-└─ Résultats formatés
-
-📞 <b>SUPPORT:</b> Contactez l'administrateur"""
+💡 <i>Le numéro doit contenir 10 chiffres</i>"""
     
     @staticmethod
     def error_syntax():
-        return """🎨 <b>❌ ERREUR DE SYNTAXE</b>
+        return """❌ <b>Erreur de syntaxe</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>💡 UTILISATION CORRECTE</b>
-<code>/number 0612345678</code>
+<b>Utilisation correcte:</b>
+<code>/number 0659515481</code>
 
-<b>📋 EXEMPLES CONCRETS</b>
-├─ <code>/number 0631057528</code>
-├─ <code>/number 0667324073</code>
-└─ <code>/number 0675448532</code>
-
-🔧 <b>Format: 10 chiffres requis</b>"""
+<b>Exemples:</b>
+• <code>/number 0631057528</code>
+• <code>/number 0667324073</code>
+• <code>/number 0675448532</code>"""
     
     @staticmethod
     def searching_message(numero):
-        return f"""🎨 <b>🔍 LANCEMENT DE LA RECHERCHE</b>
+        return f"""🔍 <b>Recherche en cours...</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>📞 NUMÉRO CIBLÉ:</b> <code>{numero}</code>
-<b>⏳ STATUT:</b> Analyse en cours...
+📞 <b>Numéro:</b> {numero}
+⏳ <b>Statut:</b> Analyse de la base de données...
 
-<b>🔄 PROCESSUS:</b>
-├─ Vérification base de données
-├─ Extraction des informations  
-├─ Formatage des résultats
-└─ Préparation de l'affichage
-
-<i>⏰ Veuillez patienter quelques secondes</i>"""
+<i>Veuillez patienter</i>"""
     
     @staticmethod
     def format_fiche(fiche_brute, numero):
-        """Formate une fiche en version ultra jolie"""
-        lignes = fiche_brute.split('\n')
-        
-        # Extraire le nom
-        nom = ""
-        for ligne in lignes:
-            ligne_clean = ligne.strip()
-            if ligne_clean and not ligne_clean.startswith('Né(e)') and not ligne_clean.startswith('Adresse'):
-                nom = ligne_clean
-                break
-        
-        # Extraire les informations
-        infos = {}
-        current_key = ""
-        
-        for ligne in lignes:
-            ligne_clean = ligne.strip()
+        """Formate une fiche avec barre verte et match found"""
+        try:
+            lignes = fiche_brute.split('\n')
             
-            if ':' in ligne_clean:
-                key, value = ligne_clean.split(':', 1)
-                infos[key.strip()] = value.strip()
-                current_key = key.strip()
-            elif current_key and ligne_clean:
-                infos[current_key] += " " + ligne_clean
-        
-        # Nettoyer les valeurs
-        for key in infos:
-            infos[key] = infos[key].strip()
-        
-        # Formater le résultat
-        heure_actuelle = datetime.now().strftime("%H:%M")
-        date_actuelle = datetime.now().strftime("%d/%m/%Y")
-        
-        return f"""🎨 <b>🔍 RECHERCHE TELEPHONIQUE</b>
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+            # Extraire le nom
+            nom = ""
+            for ligne in lignes:
+                ligne_clean = ligne.strip()
+                if ligne_clean and not ligne_clean.startswith('Né(e)') and not ligne_clean.startswith('Adresse'):
+                    nom = ligne_clean
+                    break
+            
+            # Extraire les informations
+            infos = {}
+            current_key = ""
+            
+            for ligne in lignes:
+                ligne_clean = ligne.strip()
+                
+                if ':' in ligne_clean:
+                    key, value = ligne_clean.split(':', 1)
+                    infos[key.strip()] = value.strip()
+                    current_key = key.strip()
+                elif current_key and ligne_clean:
+                    infos[current_key] += " " + ligne_clean
+            
+            # Nettoyer les valeurs
+            for key in infos:
+                infos[key] = infos[key].strip()
+            
+            # Formater avec barre verte et match found
+            heure_actuelle = datetime.now().strftime("%H:%M")
+            
+            return f"""
+🏷️ <b>Noleak</b>
+👤 <b>teddy</b>  
+📞 <code>/number {numero}</code>  
 
-<b>📊 IDENTIFICATION</b>
-├─ <b>🔎 Requête:</b> <code>/number {numero}</code>
-├─ <b>👤 Nom:</b> {nom}
-├─ <b>🎂 Naissance:</b> {infos.get('Né(e) le', '❌ Non renseigné')}
-└─ <b>🏷️ Dép. naissance:</b> {infos.get('Dpt de naissance', '❌ Non renseigné')}
+🟢 <b>Match found:</b>  
 
-<b>📍 LOCALISATION</b>
-├─ <b>🏠 Adresse:</b> {infos.get('Adresse', '❌ Non renseigné')}
-└─ <b>🌆 Ville:</b> {infos.get('Ville', '❌ Non renseigné')}
+<b>{nom}</b>  
+🗓️ <b>Né(e) le</b> {infos.get('Né(e) le', 'Non renseigné')}  
+🏠 <b>Adresse :</b> {infos.get('Adresse', 'Non renseigné')}  
+📱 <b>Téléphone(s) :</b> {infos.get('Téléphone(s)', 'Non renseigné')}  
+💳 <b>IBAN :</b> {infos.get('IBAN', 'Non renseigné')}  
+🏦 <b>BIC :</b> {infos.get('BIC', 'Non renseigné')}  
+📧 <b>Email :</b> {infos.get('Email', 'Non renseigné')}  
+🌆 <b>Ville :</b> {infos.get('Ville', 'Non renseigné')}  
 
-<b>📞 COORDONNÉES</b>
-├─ <b>📱 Téléphone:</b> <code>{infos.get('Téléphone(s)', '❌ Non renseigné')}</code>
-└─ <b>📧 Email:</b> <code>{infos.get('Email', '❌ Non renseigné')}</code>
-
-<b>💳 INFORMATIONS BANCAIRES</b>
-├─ <b>🏦 IBAN:</b> <code>{infos.get('IBAN', '❌ Non renseigné')}</code>
-└─ <b>🏛️ BIC:</b> <code>{infos.get('BIC', '❌ Non renseigné')}</code>
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ <b>RECHERCHE RÉUSSIE</b> • 📅 {date_actuelle} • 🕒 {heure_actuelle}"""
+🕒 {heure_actuelle}
+"""
+        except Exception as e:
+            return f"❌ Erreur formatage: {e}"
     
     @staticmethod
     def error_not_found(numero):
-        return f"""🎨 <b>🔍 RECHERCHE INFructueuse</b>
+        return f"""❌ <b>Aucun résultat</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📞 <b>Numéro recherché:</b> <code>{numero}</code>
-❌ <b>Statut:</b> Aucun résultat
+📞 <b>Numéro recherché:</b> {numero}
+🔍 <b>Statut:</b> Aucune correspondance
 
 💡 <b>Suggestions:</b>
 • Vérifiez le numéro
-• Format: 10 chiffres
-• Essayez un autre numéro
-
-🕒 {datetime.now().strftime("%H:%M")} • 🔍 Recherche terminée"""
-    
-    @staticmethod
-    def error_system(e):
-        return f"""🎨 <b>❌ ERREUR SYSTÈME</b>
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-⚠️ <b>Erreur technique:</b> {e}
-🔧 <b>Solution:</b> Contactez l'administrateur
-
-🛠️ Système de recherche temporairement indisponible"""
+• Essayez un autre numéro"""
     
     @staticmethod
     def unknown_command():
-        return """🎨 <b>❌ COMMANDE INCONNUE</b>
+        return """⚠️ <b>Commande non reconnue</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>💡 COMMANDES DISPONIBLES</b>
-├─ <code>/start</code> - Menu principal
-├─ <code>/number XXXXXXXXXX</code> - Recherche
-├─ <code>/help</code> - Centre d'aide
-└─ <code>/info</code> - Informations
+<b>Commandes disponibles:</b>
+• /start - Démarrer
+• /number [numéro] - Recherche
+• /help - Aide
 
-<b>🔍 EXEMPLE DE RECHERCHE</b>
-<code>/number 0631057528</code>
-
-📞 <b>BESOIN D'AIDE?</b> Utilisez /help"""
+<b>Exemple:</b>
+<code>/number 0659515481</code>"""
